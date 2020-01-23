@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "string.h"
+#include "Motors.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -130,6 +131,25 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+
+  // Testing the motor driver stuff
+
+  // Set motor 1
+  // Just for testing
+  MotorDriver motor1;
+  Motor_SetID(&motor1, 1);
+
+  // Turn off coast (active low)
+  HAL_GPIO_WritePin(GPIOG, Coast_Pin, GPIO_PIN_SET);
+  // Turn off brake (active low)
+  HAL_GPIO_WritePin(GPIOG, Brake_Pin, GPIO_PIN_SET);
+  // Set dir? Should be great
+  HAL_GPIO_WritePin(GPIOG, Dir0_Pin, GPIO_PIN_SET);
+  // Turn off reset (active low)
+  HAL_GPIO_WritePin(MotorDriverReset_GPIO_Port, MotorDriverReset_Pin, GPIO_PIN_SET);
+
+  Motor_SetSpeed(&motor1, 50);
+  Motor_Drive(&motor1);
 
   /* USER CODE END 2 */
 
@@ -277,9 +297,9 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 0;
+  htim4.Init.Prescaler = 36;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 1000;
+  htim4.Init.Period = 100;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
@@ -293,14 +313,13 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 500;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 0;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
@@ -425,7 +444,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_2|GPIO_PIN_3|USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(MotorDriverReset_GPIO_Port, MotorDriverReset_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, Dir0_Pin|Brake_Pin|Coast_Pin|USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USER_Btn_Pin */
   GPIO_InitStruct.Pin = USER_Btn_Pin;
@@ -440,8 +462,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PG2 PG3 USB_PowerSwitchOn_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|USB_PowerSwitchOn_Pin;
+  /*Configure GPIO pin : MotorDriverReset_Pin */
+  GPIO_InitStruct.Pin = MotorDriverReset_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(MotorDriverReset_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Dir0_Pin Brake_Pin Coast_Pin USB_PowerSwitchOn_Pin */
+  GPIO_InitStruct.Pin = Dir0_Pin|Brake_Pin|Coast_Pin|USB_PowerSwitchOn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

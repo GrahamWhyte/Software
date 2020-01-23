@@ -84,6 +84,14 @@ void Error_Handler(void);
 #define STLK_RX_GPIO_Port GPIOD
 #define STLK_TX_Pin GPIO_PIN_9
 #define STLK_TX_GPIO_Port GPIOD
+#define MotorDriverReset_Pin GPIO_PIN_11
+#define MotorDriverReset_GPIO_Port GPIOD
+#define Dir0_Pin GPIO_PIN_3
+#define Dir0_GPIO_Port GPIOG
+#define Brake_Pin GPIO_PIN_4
+#define Brake_GPIO_Port GPIOG
+#define Coast_Pin GPIO_PIN_5
+#define Coast_GPIO_Port GPIOG
 #define USB_PowerSwitchOn_Pin GPIO_PIN_6
 #define USB_PowerSwitchOn_GPIO_Port GPIOG
 #define USB_OverCurrent_Pin GPIO_PIN_7

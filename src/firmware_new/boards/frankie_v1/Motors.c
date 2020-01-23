@@ -4,7 +4,6 @@
 
 #include "Motors.h"
 
-
 // Set the ID of the motor
 void Motor_SetID(MotorDriver *motor, unsigned int motorID)
 {
@@ -18,42 +17,62 @@ void Motor_SetSpeed(MotorDriver *motor, unsigned int speed)
     motor->pwmVal = speed;
 }
 
-void Motor_SetBrake(MotorDriver *motor)
+void Motor_ToggleBrake(MotorDriver *motor)
 {
-    // Write to brake pin
-    // Figure out a way to abstract this (Probably just HAL lib call)
-    if (!motor->brake)
-        motor->brake = 1;
+    // Record the current state of the pin
+    // The assumption is that software will use the last recorded state of the pin to decide whether to brake
+    motor->brake = HAL_GPIO_ReadPin(GPIOG, Brake_Pin);
 
-    // I guess write to Hal here
+    // Toggle the pin
+    HAL_GPIO_TogglePin(GPIOG, Brake_Pin);
+
 }
 
-void Motor_SetCoast(MotorDriver *motor)
+void Motor_ToggleCoast(MotorDriver *motor)
 {
-    // Write to coast pin
-    // Figure out a way to abstract this (Probably just HAL lib call)
-    if (!motor->coast)
-        motor->coast = 1;           // Holy crap
+    // Record the current state of the pin
+    // The assumption is that software will use the last recorded state of the pin to decide whether to coast
+    motor->coast = HAL_GPIO_ReadPin(GPIOG, Coast_Pin);
 
-    // I guess write to Hal here + figure out where pins are defined
-//    HAL_GPIO_WritePin();
+    // Toggle the pin
+    HAL_GPIO_TogglePin(GPIOG, Coast_Pin);
 }
+
 
 void Motor_Drive(MotorDriver *motor)
 {
+
+    TIM_OC_InitTypeDef sConfigOC;
+
     unsigned int channel = 0;
 
     // This is kinda jank but will work for now
-
+    // Send PWM signal to proper channel
     if (motor->id == 1)
+    {
         channel = TIM_CHANNEL_1;
+    }
     else if (motor->id == 2)
+    {
         channel = TIM_CHANNEL_2;
+    }
     else if (motor->id == 3)
+    {
         channel = TIM_CHANNEL_3;
+    }
     else if (motor->id == 4)
+    {
         channel = TIM_CHANNEL_4;
+    }
 
+    // Populate PWM config struct
+    sConfigOC.OCMode = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse = motor->pwmVal;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
+    // Start the PWM
+    HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, channel);
     HAL_TIM_PWM_Start(&htim4, channel);
 }
 
